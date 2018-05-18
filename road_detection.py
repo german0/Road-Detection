@@ -13,7 +13,7 @@ default_path = "R10_test"
 def read_image(path):
     bandas = []
     tci = []
-    wvp = []
+    rgb = []
     #obter os ficheiros da pasta dada como input
     for (dirpath, dirnames, filenames) in walk(path):
         jp2s = filenames
@@ -24,24 +24,36 @@ def read_image(path):
             nir_band = nir_ds.GetRasterBand(1)
             nir = nir_band.ReadAsArray()
             tci = nir
+        if 'B02' in jp2:
+            nir_ds = gdal.Open(path + "/" + jp2)
+            nir_band = nir_ds.GetRasterBand(1)
+            nir = nir_band.ReadAsArray()
+            rgb.append(np.array(nir))
         if 'B03' in jp2:
             nir_ds = gdal.Open(path + "/" + jp2)
             nir_band = nir_ds.GetRasterBand(1)
             nir = nir_band.ReadAsArray()
-            wvp = nir
-    return np.array(tci),np.array(wvp)
+            rgb.append(np.array(nir))
+        if 'B04' in jp2:
+            nir_ds = gdal.Open(path + "/" + jp2)
+            nir_band = nir_ds.GetRasterBand(1)
+            nir = nir_band.ReadAsArray()
+            rgb.append(np.array(nir))
+    return  np.array(rgb)
 
-def divide_regions(image):
-    region1 = image < 50
-    region2 = (image < 125)
-    region3 = (image < 185)
-    region4 = image - region3
-    region3 = region3 - region2
-    region2 = region2 - region1
-    return region1,region2,region3,region4
+def detect_clouds(image,N,L):
+    blur = cv2.GaussianBlur(image, (5, 5), 0)
+    mean = np.array(blur).mean()
+    st = np.array(blur).std()
+    print(mean)
+    for i in range(0,N):
+        for j in range(0,L):
+            if blur[i,j] <= mean - st or blur[i,j] >= mean+st:
+                image[i,j] = mean
+    return image
 
 #ajuste de iluminação da imagem
-def adjust_gamma(image, gamma=0.3):
+def adjust_gamma(image, gamma=0.5):
     # build a lookup table mapping the pixel values [0, 255] to
     # their adjusted gamma values
     invGamma = 1.0 / gamma
@@ -53,11 +65,9 @@ def adjust_gamma(image, gamma=0.3):
 def pre_process(tci):
     final = tci
     #subdividir a imagem de forma a que o aumento do contraste tenha melhores resultados
-    clahe = cv2.createCLAHE(clipLimit=4.0, tileGridSize=(4,4))
+    clahe = cv2.createCLAHE(clipLimit=4.0, tileGridSize=(8,8))
     contrast = clahe.apply(final)
-    #print_image(contrast)
     gamma = adjust_gamma(contrast)
-    #print_image(gamma)
     return gamma
 
 def print_image(image):
@@ -66,10 +76,11 @@ def print_image(image):
 
 def build_filters():
     filters = []
-    ksize = 52
+    ksize = 21
     for theta in np.arange(0, np.pi, np.pi / 7):
-        kern = cv2.getGaborKernel((ksize, ksize), 1.7, theta, 5.0, 0.5, 0, ktype=cv2.CV_32F)
-        kern /= 1.9*kern.sum()
+        #kern = cv2.getGaborKernel((ksize, ksize), 1.0, theta, 5.0, 0.5, 0, ktype=cv2.CV_32F)
+        kern = cv2.getGaborKernel((ksize,ksize), 1.0, theta, 5.0, 0.5, 0, ktype=cv2.CV_32F)
+        kern /= 1.5*kern.sum()
         filters.append(kern)
     return filters
 
@@ -82,22 +93,23 @@ def process_gabor(img, filters):
     return accum
 
 def gabor_filtering(image):
-    filters = build_filters()
     print_image(image)
-    ret1, th1 = cv2.threshold(image, 150, 255, cv2.THRESH_BINARY)
+    filters = build_filters()
     gabor = process_gabor(image,filters)
+    print_image(gabor)
+    ret, th1 = cv2.threshold(gabor, 127, 255, cv2.THRESH_BINARY)
+    print_image(th1)
     return gabor
 
 def path_opening(image):
-    ksize = 4
+    ksize = 7
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(ksize,ksize))
     kernel2 = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(ksize,ksize))
     kernel3 = cv2.getStructuringElement(cv2.MORPH_CROSS,(ksize,ksize))
-    ret1, th1 = cv2.threshold(image, 150, 255, cv2.THRESH_BINARY)
-    #print_image(th1)
-    teste=cv2.dilate(th1,kernel,iterations = 2)
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
-    print_image(cv2.erode(teste,kernel))
+    ret1, th1 = cv2.threshold(image, 127, 255, cv2.THRESH_BINARY)
+    erode = cv2.erode(th1,kernel)
+    dilation = cv2.dilate(erode,kernel,iterations=1)
+    print_image(image)
     return 0
 
 if __name__=="__main__":
@@ -108,16 +120,14 @@ if __name__=="__main__":
     #    path = default_path
 
     #obter images
-    #tci,wvp = read_image(path)
+    #tci = read_image(path)
+
     tci = (cv2.imread('wtf.tif'))[:,:,1]
     N,L = tci.shape
-    pre = pre_process(tci)
-    #gabor = gabor_filtering(pre)
+    mean = detect_clouds(tci,N,L)
+    pre = pre_process(mean)
+    gabor = gabor_filtering(pre)
     #opening = path_opening(gabor)
     #opening = path_opening(gabor)
-    #print_image(gabor)
-    #print_image(gabor)
-    #print_image(pre)
-    #print_image(cv2.Canny(pre,100,200))
     #imsave("teste.jpeg", tci)
 

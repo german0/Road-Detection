@@ -13,3 +13,10 @@ QGIS/vias.shp
 QGIS/vias.shx
 S2B_MSIL2A_20180326T112109_N0207_R037_T29TNF_20180326T132716.zip
 vias.zip
+*.xml
+*.xml
+vias/vias.cpg
+vias/vias.dbf
+vias/vias.prj
+vias/vias.shp
+vias/vias.shx
