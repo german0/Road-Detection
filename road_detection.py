@@ -55,9 +55,9 @@ def pre_process(tci):
     #subdividir a imagem de forma a que o aumento do contraste tenha melhores resultados
     clahe = cv2.createCLAHE(clipLimit=4.0, tileGridSize=(4,4))
     contrast = clahe.apply(final)
-    print_image(contrast)
+    #print_image(contrast)
     gamma = adjust_gamma(contrast)
-    print_image(gamma)
+    #print_image(gamma)
     return gamma
 
 def print_image(image):
@@ -94,7 +94,7 @@ def path_opening(image):
     kernel2 = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(ksize,ksize))
     kernel3 = cv2.getStructuringElement(cv2.MORPH_CROSS,(ksize,ksize))
     ret1, th1 = cv2.threshold(image, 150, 255, cv2.THRESH_BINARY)
-    print_image(th1)
+    #print_image(th1)
     teste=cv2.dilate(th1,kernel,iterations = 2)
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
     print_image(cv2.erode(teste,kernel))
@@ -112,7 +112,7 @@ if __name__=="__main__":
     tci = (cv2.imread('wtf.tif'))[:,:,1]
     N,L = tci.shape
     pre = pre_process(tci)
-    gabor = gabor_filtering(pre)
+    #gabor = gabor_filtering(pre)
     #opening = path_opening(gabor)
     #opening = path_opening(gabor)
     #print_image(gabor)
