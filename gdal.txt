@@ -1,0 +1,1 @@
+setx GDAL_DATA "C:\Users\Germano\Anaconda3\Library\share\gdal"
