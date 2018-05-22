@@ -16,9 +16,8 @@ def adaptative_thresholding(image):
     mask_b = np.bitwise_and(image<=m, image > th1)
     mask_c = np.bitwise_and(image <= th2, image > m)
     mask_d = image > th2
-    #mask = np.bitwise_or(mask_c, mask_d)
-    road = image * mask_c
-    compare_images(image,road)
+    mask = np.bitwise_or(mask_c, mask_d)
+    road = image * mask
     image = road
     return image
 
@@ -29,6 +28,25 @@ def compare_images(image1, image2):
     f.add_subplot(1, 3, 2)
     plt.imshow(image2,cmap='gray')
     plt.show()
+
+#ajuste de iluminação da imagem
+def adjust_gamma(image, gamma=0.3):
+    # build a lookup table mapping the pixel values [0, 255] to
+    # their adjusted gamma values
+    invGamma = 1.5 / gamma
+    table = np.array([((i / 255.0) ** invGamma) * 255
+    for i in np.arange(0, 256)]).astype("uint8")
+    # apply gamma correction using the lookup table
+    return cv2.LUT(image, table)
+
+def pre_process(tci):
+    final = tci
+    #subdividir a imagem de forma a que o aumento do contraste tenha melhores resultados
+    clahe = cv2.createCLAHE(clipLimit=4.0, tileGridSize=(1,1))
+    contrast = clahe.apply(final)
+    compare_images(final,contrast)
+    gamma = adjust_gamma(contrast)
+    return gamma
 
 if __name__=="__main__":
     #path = ""
@@ -43,3 +61,8 @@ if __name__=="__main__":
     tci = np.array((cv2.imread('wtf.tif'))[:,:,1])
     image = np.array(tci)
     road = adaptative_thresholding(image)
+    #teste = pre_process(road)
+    kernel = cv2.getStructuringElement(cv2.MORPH_CROSS, (5, 5))
+    kernel2 = cv2.getStructuringElement(cv2.MORPH_RECT,(2,2))
+    closing = cv2.morphologyEx(road, cv2.MORPH_CLOSE, kernel2)
+    pre_process(closing)
