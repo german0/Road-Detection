@@ -42,7 +42,7 @@ def adjust_gamma(image, gamma=0.3):
 def pre_process(tci):
     final = tci
     #subdividir a imagem de forma a que o aumento do contraste tenha melhores resultados
-    clahe = cv2.createCLAHE(clipLimit=4.0, tileGridSize=(1,1))
+    clahe = cv2.createCLAHE(clipLimit=4.0, tileGridSize=(8,8))
     contrast = clahe.apply(final)
     compare_images(final,contrast)
     gamma = adjust_gamma(contrast)
@@ -60,9 +60,10 @@ if __name__=="__main__":
 
     tci = np.array((cv2.imread('wtf.tif'))[:,:,1])
     image = np.array(tci)
-    road = adaptative_thresholding(image)
+    pre = pre_process(image)
+    road = adaptative_thresholding(pre)
+    compare_images(image,road)
     #teste = pre_process(road)
     kernel = cv2.getStructuringElement(cv2.MORPH_CROSS, (5, 5))
     kernel2 = cv2.getStructuringElement(cv2.MORPH_RECT,(2,2))
     closing = cv2.morphologyEx(road, cv2.MORPH_CLOSE, kernel2)
-    pre_process(closing)
