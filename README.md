@@ -42,5 +42,5 @@ Começámos por transformar a imagem para um domínio em grayscale de forma a fa
 
 Após pré-processamento passamos para a segmentação de zonas de maior interesse da imagem. De forma a conseguir obter os resultados pretendidos a intensidade da imagem é dividida em 4 regiões de análise, baseadas na média de intensidades da imagem (M). A região A inclui píxeis com valores de intensidade entre o valor mais baixo da intensidade e a metade da média de intensidades, correspondendo a zonas com carros escuros, sombras e lagos. A região B tem pixeis com domínio de intensidades entre metade da média de píxeis até à média M e indentifica objetos como árvores e relvado. A região C inclui valores de intensitade entre M e metade do valor máximo de intensidades, sendo possível indentificar estradas de alcatrão. A última região D, com os restantes píxeis indentifica também estradas de alcatrão bem como veículos mais claros, núvens e algumas casas. Dito isto, para os passos seguintes foram segmentadas as regiões C e D.
 
-Para uma análise visual da divisão de intensidades, poderá ser consultada a imagem *histograma.png*
+![alt text](https://github.com/german0/Road-Detection/blob/master/histograma.png)
 
