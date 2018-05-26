@@ -44,3 +44,14 @@ Após pré-processamento passamos para a segmentação de zonas de maior interes
 
 ![alt text](https://github.com/german0/Road-Detection/blob/master/histograma.png)
 
+### Operações Morfológicas
+
+Depois de obtidas as regiões de interesse, são necessárias algumas operações morfológicas de forma a remover componentes irrelevantes. Nas operações morfológicas as operações de dilatação e erosão são a base do processamento de imagem. Inicialmente foi aplicada um *opening* da imagem, que se trata de uma erosão seguida de uma dilatação, o que permitiu obter casas e nuvens de maior dimensão e visto que não se tratam de componentes de interesse, foram posteriormente removidos da imagem.
+
+Após feita esta remoção de componentes de grande dimensão, foi executado um *closing* da imagem obtida, para obter o efeito inverso do passo anterior ou seja, remover componentes de pequena dimensão.
+
+Removidos os elementos com menor interesse, conseguimos obter a silhueta de estradas pretendidas no resultado final. Uma vez que, como foi dito anteriormente, uma estrada é identificada pela sua conectividade, foi aplicada uma ténica de *skeletization* de forma a preservar a continuidade e conectividade dos componentes ligados e ao mesmo tempo remover píxeis de *foreground*.
+
+*Skeletization* permite diminuir a grossura de objetos e funciona como um *edge detector*, reduzindo todas as linhas para linhas com apenas 1 pixel de grossura através de um algoritmo de transformação *hit-and-miss*. Após analisados alguns algoritmos implementados de *thining*, foi decidido utilizar o algoritmo *Zhang-Suen Thinning algorithm* visto que se trata do algoritmo mais utilizado e remove, em cada iteração, os segmentos redundantes até atingir o resultado pretendido, resultado esse que é verificado comparando o total de píxeis sobre os píxeis segmentados até então.
+
+

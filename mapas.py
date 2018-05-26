@@ -51,7 +51,6 @@ def adjust_gamma(image, gamma=0.3):
 
 def pre_process(image):
     final = image
-    #subdividir a imagem de forma a que o aumento do contraste tenha melhores resultados
     clahe = cv2.createCLAHE(clipLimit=4.0, tileGridSize=(8,8))
     contrast = clahe.apply(final)
     gamma = adjust_gamma(contrast)
@@ -117,6 +116,7 @@ def process(image):
     m_opening = m_opening > 0
     opening = np.array(image * (1-m_opening),dtype="uint8")
     closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel2)
+    compare_images(image,closing)
     skel = skeleton(opening)
     return skel
 
@@ -139,6 +139,5 @@ if __name__=="__main__":
     pre = pre_process(image)
     road = adaptative_thresholding(pre)
     skel = process(road)
-    compare_images(image,skel)
     #teste = pre_process(road)
     #compare_images(road,closing)
