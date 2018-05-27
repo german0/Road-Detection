@@ -5,28 +5,61 @@ import matplotlib.pyplot as plt
 import mahotas
 
 from os import walk
-default_path = "R10_test"
+default_path = "R10m"
+
+def read_image(path):
+    bandas = []
+    tci = []
+    rgb = []
+    jp2s = []
+    #obter os ficheiros da pasta dada como input
+    print(path)
+    for (dirpath, dirnames, filenames) in walk(path):
+        jp2s = filenames
+        break
+    for jp2 in jp2s:
+        if 'TCI' in jp2:
+            nir_ds = gdal.Open(path + "/" + jp2)
+            nir_band = nir_ds.GetRasterBand(1)
+            nir = nir_band.ReadAsArray()
+            tci = nir
+        #if 'B02' in jp2:
+        #    nir_ds = gdal.Open(path + "/" + jp2)
+        #    nir_band = nir_ds.GetRasterBand(1)
+        #    red = nir_band.ReadAsArray()
+        #if 'B03' in jp2:
+        #    nir_ds = gdal.Open(path + "/" + jp2)
+        #    nir_band = nir_ds.GetRasterBand(1)
+        #    green = nir_band.ReadAsArray()
+        #if 'B04' in jp2:
+        #    nir_ds = gdal.Open(path + "/" + jp2)
+        #    nir_band = nir_ds.GetRasterBand(1)
+        #    blue = nir_band.ReadAsArray()
+    #N,L = red.shape
+    #rgb = np.zeros((N,L,3), 'uint8')
+    #rgb[...,0] = red
+    #rgb[...,1] = green
+    #rgb[...,2] = blue
+    return  tci,np.array(rgb)
 
 def mean(image):
     N,L = image.shape
     total = 0
-    values = 0
-    for x in range(N):
-        for y in range(L):
-            if image[x,y] > 0:
-                values += image[x,y]
-                total +=1
+    values = image.sum()
+    total = ((image>0)*1).sum()
     return values/total
 
 def adaptative_thresholding(image):
-    m = np.array(image).mean()
+    #m = np.array(image).mean()
+    #print(m,mean(image))
+    m = mean(image)
     th1 = round(m/2)
     th2 = m + round(m/2)
     th3 = 255 - round(m/2)
     mask_a = image <= th1
     mask_b = np.bitwise_and(image<=m, image > th1)
     mask_c = np.bitwise_and(image <= th2, image > m)
-    mask_d = image > th2
+    mask_d = np.bitwise_and(image>th2, image<240)
     mask = np.bitwise_or(mask_c, mask_d)
     road = image * mask
     return np.array(mask,dtype="uint8")
@@ -40,7 +73,7 @@ def compare_images(image1, image2):
     plt.show()
 
 #ajuste de iluminação da imagem
-def adjust_gamma(image, gamma=0.3):
+def adjust_gamma(image, gamma=0.4):
     # build a lookup table mapping the pixel values [0, 255] to
     # their adjusted gamma values
     invGamma = 1.5 / gamma
@@ -51,49 +84,18 @@ def adjust_gamma(image, gamma=0.3):
 
 def pre_process(image):
     final = image
-    clahe = cv2.createCLAHE(clipLimit=4.0, tileGridSize=(8,8))
+    #clahe = cv2.createCLAHE(clipLimit=4.0, tileGridSize=(8,8))
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(11, 11))
     contrast = clahe.apply(final)
     gamma = adjust_gamma(contrast)
     return gamma
-
-def neighbours_vec(image):
-    return image[2:,1:-1], image[2:,2:], image[1:-1,2:], image[:-2,2:], image[:-2,1:-1], image[:-2,:-2], image[1:-1,:-2], image[2:,:-2]
-
-def transitions_vec(P2, P3, P4, P5, P6, P7, P8, P9):
-    return ((P3-P2) > 0).astype(int) + ((P4-P3) > 0).astype(int) +\
-           ((P5-P4) > 0).astype(int) + ((P6-P5) > 0).astype(int) +\
-           ((P7-P6) > 0).astype(int) + ((P8-P7) > 0).astype(int) +\
-           ((P9-P8) > 0).astype(int) + ((P2-P9) > 0).astype(int)
-
-def zhangSuen_vec(image, iterations):
-    for iter in range (1, iterations):
-        print (iter)
-        # step 1
-        P2,P3,P4,P5,P6,P7,P8,P9 = neighbours_vec(image)
-        condition0 = image[1:-1,1:-1]
-        condition4 = P4*P6*P8
-        condition3 = P2*P4*P6
-        condition2 = transitions_vec(P2, P3, P4, P5, P6, P7, P8, P9) == 1
-        condition1 = (2 <= P2+P3+P4+P5+P6+P7+P8+P9) * (P2+P3+P4+P5+P6+P7+P8+P9 <= 6)
-        cond = (condition0 == 1) * (condition4 == 0) * (condition3 == 0) * (condition2 == 1) * (condition1 == 1)
-        changing1 = np.where(cond == 1)
-        image[changing1[0]+1,changing1[1]+1] = 0
-        # step 2
-        P2,P3,P4,P5,P6,P7,P8,P9 = neighbours_vec(image)
-        condition0 = image[1:-1,1:-1]
-        condition4 = P2*P6*P8
-        condition3 = P2*P4*P8
-        condition2 = transitions_vec(P2, P3, P4, P5, P6, P7, P8, P9) == 1
-        condition1 = (2 <= P2+P3+P4+P5+P6+P7+P8+P9) * (P2+P3+P4+P5+P6+P7+P8+P9 <= 6)
-        cond = (condition0 == 1) * (condition4 == 0) * (condition3 == 0) * (condition2 == 1) * (condition1 == 1)
-        changing2 = np.where(cond == 1)
-        image[changing2[0]+1,changing2[1]+1] = 0
-    return image
 
 def skeleton(img):
     size = np.size(img)
     skel = np.zeros(img.shape, np.uint8)
     element = cv2.getStructuringElement(cv2.MORPH_CROSS, (3, 3))
+    kernel_thin = np.array([[1,1,1],[-1,1,1],[0,0,0]])
+    kernel_prune = np.array([[0,-1,-1],[0,1,1],[0,0,0]])
     done = False
 
     while (not done):
@@ -104,40 +106,97 @@ def skeleton(img):
         img = eroded.copy()
 
         zeros = size - cv2.countNonZero(img)
-        print(size,zeros)
         if zeros == size:
             done = True
     return skel
 
-def process(image):
-    kernel1 = np.ones((8, 8), np.uint8)
+def morphology(image):
+    kernel1 = np.ones((5, 5), np.uint8)
     kernel2 = np.ones((2, 2), np.uint8)
     m_opening = cv2.morphologyEx(image, cv2.MORPH_OPEN, kernel1)
-    m_opening = m_opening > 0
-    opening = np.array(image * (1-m_opening),dtype="uint8")
-    closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel2)
-    compare_images(image,closing)
-    skel = skeleton(opening)
-    return skel
+    compare_images(image,m_opening)
+    #m_opening = m_opening > 0
+    #opening = np.array(image * (1-m_opening),dtype="uint8")
+    #compare_images(image,opening)
+    closing = cv2.morphologyEx(image, cv2.MORPH_CLOSE, kernel2)
+    m_opening = cv2.morphologyEx(closing, cv2.MORPH_OPEN, kernel2)
+    skel = skeleton(m_opening)
+    return closing
 
-if __name__=="__main__":
-    #path = ""
-    #path = input("Satellite images folder:")
-    #if path == "":
-    #    print("Using default path " + default_path)
-    #    path = default_path
+def pruning(skel):
+    # make out input nice, possibly necessary
+    skel = skel.copy()
+    skel[skel != 0] = 1
+    skel = np.uint8(skel)
 
-    #obter images
-    #tci = read_image(path)
+    # apply the convolution
+    kernel = np.uint8([[1, 1, 1],
+                       [1, 10, 1],
+                       [1, 1, 1]])
+    src_depth = -1
+    filtered = cv2.filter2D(skel, src_depth, kernel)
+
+    # now look through to find the value of 11
+    # this returns a mask of the endpoints, but if you just want the coordinates, you could simply return np.where(filtered==11)
+    out = np.zeros_like(skel)
+    out[np.where(filtered == 11)] = 1
+    return out
+
+def build_filters():
+    filters = []
+    ksize = 52
+    for theta in np.arange(0, np.pi, np.pi / 7):
+        #kern = cv2.getGaborKernel((ksize, ksize), 1.0, theta, 5.0, 0.5, 0, ktype=cv2.CV_32F)
+        kern = cv2.getGaborKernel((ksize,ksize), 3.0, theta, 10.0, 0.5, 0, ktype=cv2.CV_32F)
+        kern /= 1.5*kern.sum()
+        filters.append(kern)
+    return filters
+
+def process_gabor(img, filters):
+    accum = np.zeros_like(img)
+    gabor = img
+    for kern in filters:
+        fimg = cv2.filter2D(gabor, cv2.CV_8UC3, kern)
+        np.maximum(accum, fimg, accum)
+    return accum
+
+def gabor_filtering(image):
+    filters = build_filters()
+    gabor = process_gabor(image,filters)
+    #print_image(gabor)
+    ret, th1 = cv2.threshold(image, 100, 255, cv2.THRESH_BINARY)
+    return gabor
+
+def process(image):
+    N,L = image.shape
+    stepx = round(N/30)
+    stepy = round(N/30)
     kernel1 = np.ones((8, 8), np.uint8)
     kernel2 = np.ones((3, 3), np.uint8)
     kernel3 = cv2.getStructuringElement(cv2.MORPH_CROSS, (8, 8))
-    kernel4 = cv2.getStructuringElement(cv2.MORPH_RECT,(5,5))
-
-    tci = np.array((cv2.imread('wtf.tif'))[:,:,1])
-    image = np.array(tci)
+    kernel4 = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
     pre = pre_process(image)
     road = adaptative_thresholding(pre)
-    skel = process(road)
-    #teste = pre_process(road)
-    #compare_images(road,closing)
+    for x in range(0,N-stepx,stepx):
+        for y in range(0,L-stepy,stepy):
+            cropped = road[x:x+stepx,y:y+stepy]
+            skel = morphology(cropped)
+            #compare_images(image[x:x+stepx,y:y+stepy],skel)
+            #prune = pruning(skel)
+    # compare_images(skel,cv2.Canny(skel,100,200))
+    return skel
+
+
+if __name__=="__main__":
+    path = ""
+    path = input("Satellite images folder:")
+    if path == "":
+        print("Using default path " + default_path)
+        path = default_path
+    # tci = np.array((cv2.imread('wtf.tif'))[:,:,1])
+    tci,rgb = read_image(path)
+    tci = np.array(tci,dtype='uint8')
+    final = process(tci)
+    #edges = cv2.Canny(img,100,200)
+
+    #testar closings e openings
