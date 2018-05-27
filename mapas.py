@@ -49,19 +49,27 @@ def mean(image):
     total = ((image>0)*1).sum()
     return values/total
 
+def remove_bright(image,mask):
+    #160
+    image = image*mask
+    blur = cv2.GaussianBlur(image,(11,11),0)
+    thresh = cv2.threshold(blur, 160, 255, cv2.THRESH_BINARY)[1]
+    thresh = cv2.erode(thresh, None, iterations=2)
+    thresh = cv2.dilate(thresh, None, iterations=4)
+    return thresh
+
 def adaptative_thresholding(image):
     #m = np.array(image).mean()
     #print(m,mean(image))
     m = mean(image)
     th1 = round(m/2)
     th2 = m + round(m/2)
-    th3 = 255 - round(m/2)
     mask_a = image <= th1
     mask_b = np.bitwise_and(image<=m, image > th1)
     mask_c = np.bitwise_and(image <= th2, image > m)
-    mask_d = np.bitwise_and(image>th2, image<240)
+    print(th2)
+    mask_d = image>th2
     mask = np.bitwise_or(mask_c, mask_d)
-    road = image * mask
     return np.array(mask,dtype="uint8")
 
 def compare_images(image1, image2):
@@ -73,7 +81,7 @@ def compare_images(image1, image2):
     plt.show()
 
 #ajuste de iluminação da imagem
-def adjust_gamma(image, gamma=0.4):
+def adjust_gamma(image, gamma=0.5):
     # build a lookup table mapping the pixel values [0, 255] to
     # their adjusted gamma values
     invGamma = 1.5 / gamma
@@ -85,7 +93,7 @@ def adjust_gamma(image, gamma=0.4):
 def pre_process(image):
     final = image
     #clahe = cv2.createCLAHE(clipLimit=4.0, tileGridSize=(8,8))
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(11, 11))
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
     contrast = clahe.apply(final)
     gamma = adjust_gamma(contrast)
     return gamma
@@ -111,17 +119,16 @@ def skeleton(img):
     return skel
 
 def morphology(image):
-    kernel1 = np.ones((5, 5), np.uint8)
+    kernel1 = np.ones((20, 20), np.uint8)
     kernel2 = np.ones((2, 2), np.uint8)
-    m_opening = cv2.morphologyEx(image, cv2.MORPH_OPEN, kernel1)
-    compare_images(image,m_opening)
+    m_opening = cv2.morphologyEx(image, cv2.MORPH_OPEN, kernel1,iterations=4)
     #m_opening = m_opening > 0
     #opening = np.array(image * (1-m_opening),dtype="uint8")
     #compare_images(image,opening)
     closing = cv2.morphologyEx(image, cv2.MORPH_CLOSE, kernel2)
     m_opening = cv2.morphologyEx(closing, cv2.MORPH_OPEN, kernel2)
     skel = skeleton(m_opening)
-    return closing
+    return m_opening
 
 def pruning(skel):
     # make out input nice, possibly necessary
@@ -177,11 +184,13 @@ def process(image):
     kernel4 = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
     pre = pre_process(image)
     road = adaptative_thresholding(pre)
+    clouds = remove_bright(pre,road)
     for x in range(0,N-stepx,stepx):
         for y in range(0,L-stepy,stepy):
             cropped = road[x:x+stepx,y:y+stepy]
             skel = morphology(cropped)
-            #compare_images(image[x:x+stepx,y:y+stepy],skel)
+            compare_images(pre[x:x+stepx,y:y+stepy],clouds[x:x+stepx,y:y+stepy])
+            #compare_images(pre[x:x + stepx, y:y + stepy], cropped)
             #prune = pruning(skel)
     # compare_images(skel,cv2.Canny(skel,100,200))
     return skel
