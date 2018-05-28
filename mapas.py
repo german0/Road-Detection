@@ -2,7 +2,7 @@ import numpy as np
 import gdal
 import cv2
 import matplotlib.pyplot as plt
-import mahotas
+import osgeo
 
 from os import walk
 default_path = "R10m"
@@ -49,25 +49,23 @@ def mean(image):
     total = ((image>0)*1).sum()
     return values/total
 
-def remove_bright(image,mask):
+def detect_bright(image,mask):
     #160
-    image = image*mask
     blur = cv2.GaussianBlur(image,(11,11),0)
-    thresh = cv2.threshold(blur, 160, 255, cv2.THRESH_BINARY)[1]
+    thresh = cv2.threshold(blur, 150, 255, cv2.THRESH_BINARY)[1]
     thresh = cv2.erode(thresh, None, iterations=2)
-    thresh = cv2.dilate(thresh, None, iterations=4)
+    thresh = cv2.dilate(thresh, None, iterations=3)
     return thresh
 
 def adaptative_thresholding(image):
-    #m = np.array(image).mean()
+    m = np.array(image).mean()
     #print(m,mean(image))
-    m = mean(image)
+    #m = mean(image)
     th1 = round(m/2)
     th2 = m + round(m/2)
     mask_a = image <= th1
     mask_b = np.bitwise_and(image<=m, image > th1)
     mask_c = np.bitwise_and(image <= th2, image > m)
-    print(th2)
     mask_d = image>th2
     mask = np.bitwise_or(mask_c, mask_d)
     return np.array(mask,dtype="uint8")
@@ -82,6 +80,7 @@ def compare_images(image1, image2):
 
 #ajuste de iluminação da imagem
 def adjust_gamma(image, gamma=0.5):
+    #gamma o,5
     # build a lookup table mapping the pixel values [0, 255] to
     # their adjusted gamma values
     invGamma = 1.5 / gamma
@@ -119,16 +118,19 @@ def skeleton(img):
     return skel
 
 def morphology(image):
-    kernel1 = np.ones((20, 20), np.uint8)
-    kernel2 = np.ones((2, 2), np.uint8)
-    m_opening = cv2.morphologyEx(image, cv2.MORPH_OPEN, kernel1,iterations=4)
+    #kernel1 = np.ones((20, 20), np.uint8)
+    #kernel2 = np.ones((2, 2), np.uint8)
+    # erosion = cv2.erode(laplacian*255, kernel2, iterations=1)
+    #opening = cv2.morphologyEx(image, cv2.MORPH_CLOSE, kernel2, iterations=1)
+    #m_opening = cv2.morphologyEx(image, cv2.MORPH_OPEN, None,iterations=2)
     #m_opening = m_opening > 0
     #opening = np.array(image * (1-m_opening),dtype="uint8")
     #compare_images(image,opening)
-    closing = cv2.morphologyEx(image, cv2.MORPH_CLOSE, kernel2)
-    m_opening = cv2.morphologyEx(closing, cv2.MORPH_OPEN, kernel2)
-    skel = skeleton(m_opening)
-    return m_opening
+    #closing = cv2.morphologyEx(image, cv2.MORPH_CLOSE, kernel2, iterations=2)
+    #opening = cv2.morphologyEx(closing, cv2.MORPH_OPEN, kernel2, iterations=1)
+    skel = skeleton(image)
+    #closing = cv2.morphologyEx(skel, cv2.MORPH_CLOSE, kernel2, iterations=2)
+    return skel
 
 def pruning(skel):
     # make out input nice, possibly necessary
@@ -152,9 +154,9 @@ def pruning(skel):
 def build_filters():
     filters = []
     ksize = 52
-    for theta in np.arange(0, np.pi, np.pi / 7):
+    for theta in np.arange(0, np.pi, np.pi / 12):
         #kern = cv2.getGaborKernel((ksize, ksize), 1.0, theta, 5.0, 0.5, 0, ktype=cv2.CV_32F)
-        kern = cv2.getGaborKernel((ksize,ksize), 3.0, theta, 10.0, 0.5, 0, ktype=cv2.CV_32F)
+        kern = cv2.getGaborKernel((ksize,ksize), 3.0, theta, 5.0, 0.5, 0, ktype=cv2.CV_32F)
         kern /= 1.5*kern.sum()
         filters.append(kern)
     return filters
@@ -171,26 +173,30 @@ def gabor_filtering(image):
     filters = build_filters()
     gabor = process_gabor(image,filters)
     #print_image(gabor)
-    ret, th1 = cv2.threshold(image, 100, 255, cv2.THRESH_BINARY)
+    #ret, th1 = cv2.threshold(image, 100, 255, cv2.THRESH_BINARY)
     return gabor
+
+def interval(image):
+    min = np.array(image).min()
+    image += abs(min)
+    max = np.array(image).max()
+    return (image/max)*255
 
 def process(image):
     N,L = image.shape
     stepx = round(N/30)
     stepy = round(N/30)
-    kernel1 = np.ones((8, 8), np.uint8)
-    kernel2 = np.ones((3, 3), np.uint8)
-    kernel3 = cv2.getStructuringElement(cv2.MORPH_CROSS, (8, 8))
-    kernel4 = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
     pre = pre_process(image)
-    road = adaptative_thresholding(pre)
-    clouds = remove_bright(pre,road)
+    road_mask = adaptative_thresholding(pre)
+    road = pre * road_mask
     for x in range(0,N-stepx,stepx):
         for y in range(0,L-stepy,stepy):
             cropped = road[x:x+stepx,y:y+stepy]
-            skel = morphology(cropped)
-            compare_images(pre[x:x+stepx,y:y+stepy],clouds[x:x+stepx,y:y+stepy])
-            #compare_images(pre[x:x + stepx, y:y + stepy], cropped)
+            laplacian = cv2.Laplacian(cropped, cv2.CV_64F)
+            laplacian = interval(laplacian)
+            #skel = morphology(np.array(laplacian,dtype='uint8'))
+            #compare_images(image[x:x+stepx,y:y+stepy],255-image[x:x+stepx,y:y+stepy])
+            compare_images(cropped,laplacian)
             #prune = pruning(skel)
     # compare_images(skel,cv2.Canny(skel,100,200))
     return skel
