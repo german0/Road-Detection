@@ -49,13 +49,14 @@ def mean(image):
     total = ((image>0)*1).sum()
     return values/total
 
-def detect_bright(image,mask):
+def detect_bright(image):
     #160
+    element = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(11,11))
     blur = cv2.GaussianBlur(image,(11,11),0)
     thresh = cv2.threshold(blur, 150, 255, cv2.THRESH_BINARY)[1]
-    thresh = cv2.erode(thresh, None, iterations=2)
-    thresh = cv2.dilate(thresh, None, iterations=3)
-    return thresh
+    thresh = cv2.erode(thresh, None, iterations=5)
+    thresh = cv2.dilate(thresh, element, iterations=3)
+    return 1*(thresh == 255)
 
 def adaptative_thresholding(image):
     m = np.array(image).mean()
@@ -179,8 +180,8 @@ def gabor_filtering(image):
 def interval(image):
     min = np.array(image).min()
     image += abs(min)
-    max = np.array(image).max()
-    return (image/max)*255
+    max = np.array(image).max() + abs(min)
+    return np.divide(image,max)*255
 
 def process(image):
     N,L = image.shape
@@ -189,14 +190,24 @@ def process(image):
     pre = pre_process(image)
     road_mask = adaptative_thresholding(pre)
     road = pre * road_mask
+    clouds_mask = detect_bright(road)
+    laplacian = cv2.Laplacian(road, cv2.CV_64F)
+    print(clouds_mask.max())
+    laplacian = interval(laplacian) * (1-clouds_mask)
+    m = laplacian.mean()
+    print(m)
     for x in range(0,N-stepx,stepx):
         for y in range(0,L-stepy,stepy):
-            cropped = road[x:x+stepx,y:y+stepy]
-            laplacian = cv2.Laplacian(cropped, cv2.CV_64F)
-            laplacian = interval(laplacian)
+            cropped = laplacian[x:x+stepx,y:y+stepy]
+            #print(laplacian.max(),laplacian.min())
             #skel = morphology(np.array(laplacian,dtype='uint8'))
-            #compare_images(image[x:x+stepx,y:y+stepy],255-image[x:x+stepx,y:y+stepy])
-            compare_images(cropped,laplacian)
+            compare_images(image[x:x+stepx,y:y+stepy],cropped<=m)
+            já deteta estradas
+            secalhar calcular média por linha e depois a mediana de todas
+            closings e openings para ficar com estradas mais definidas
+            skeletization
+            tá autamente
+            #compare_images(pre[x:x+stepx,y:y+stepy],clouds_mask[x:x+stepx,y:y+stepy])
             #prune = pruning(skel)
     # compare_images(skel,cv2.Canny(skel,100,200))
     return skel
