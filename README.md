@@ -5,7 +5,7 @@ Dado como input imagens de satélite, detetar estradas.
 
 *André Germano A71150*
 
-*Sofia Carvalho A7*
+*Sofia Carvalho A76658*
 
 **Software Utilizado**
 
@@ -23,24 +23,24 @@ http://www.gdal.org/frmt_sentinel2.html
 
 ## Introdução
 
- O objetivo deste trabalho passa por, dadas imagens de satélite do projeto Europeu *Copernicus* recolhidas por satélites *Sentinel-2*, identificar estradas e comparar os resultados obtidos com estradas que efetivamente existem.
- Para isto foram implementadas técnicas de processamento de imagem de forma a segmentar estradas a partir das imagens de satélite dadas e de seguida os resultados obtidos foram comparados com dados de estradas reais descarregados a partir do *OpenStreetMap*.
+ O objetivo deste trabalho passa por, dadas imagens de satélite provenientes do projeto Europeu *Copernicus*, recolhidas por satélites *Sentinel-2*, identificar estradas e comparar os resultados obtidos com estradas que efetivamente existem.
+ Para isto, foram implementadas técnicas de processamento de imagem para permitir segmentar estradas a partir das imagens de satélite dadas. De seguida, os resultados obtidos foram comparados com dados de estradas reais descarregados a partir do *OpenStreetMap*.
 
 ## Desenvolvimento
 
-Uma estrada é caracterizada pelo seu comprimento, largura, continuidade, que se intersetam em cruzamentos e cor acinzentada. Como *input*, São fornecidas imagens no formato *.jp2* que se trata de um formato de compressão que permite o aumento de qualidade de imagens comparativamente a imagens em outros formatos. Como fornecem informações muito detalhadas, possuem uma complexidade alta de processamento, recorremos portanto à ferramenta *GDal* que, em conjunto com outras ferramentas disponíveis em *Python* possibilitou a leitura e processamento das imagens.
+Uma estrada é caracterizada pelo seu comprimento, largura e continuidade, que se intersetam em cruzamentos e têm uma cor acinzentada. Como *input*, são fornecidas imagens no formato *.jp2*. Este formato trata-se de um formato de compressão que permite obter um aumento da qualidade das imagens, quando comparadas com imagens noutros formatos. Como este tipo de imagens fornece informações muito detalhadas, possuem uma alta complexidade de processamento. Assim, foi necessário recorrer à ferramenta *GDal* que, em conjunto com outras ferramentas disponíveis em *Python*, possibilitou a leitura e processamento das mesmas.
 
-O conjunto de imagens possui uma resolução espacial de 10 metros, 4 dessas imagens representam a refletância de superfície para as bandas B02, B03, B04* e *B08* que correspondem ao domínio de frequências azul, verde, vermelho e infra-vermelho. Para além destas temos também uma imagem *TCI* que contém as cores reais da fotografia retirada pelo satélite, *WVP (water vapor map)* e *AOT (aerosol optical thickness map)*.
+O conjunto de imagens possui uma resolução espacial de 10 metros e quatro dessas imagens representam a refletância da superfície nas bandas B02, B03, B04* e *B08*, bandas essas que correspondem ao domínio de frequências azul, verde, vermelho e infra-vermelho, respetivamente. Para além destas, há também uma imagem *TCI* que contém as cores reais da fotografia retirada pelo satélite, uma *WVP (water vapor map)* e, por fim, uma *AOT (aerosol optical thickness map)*.
 
 ### Pré-processamento
 
-Para a deteção de estradas e analisando a informação apresentada em cada um dos três canais em cima referidos optámos por utilizar a imagem *TCI* uma vez que é construida a partir das bandas *B02* (azul), *B03* (verde) e *B04* (vermelho).
+Para a deteção de estradas, e analisando a informação apresentada em cada um dos três canais anteriormente referidos, optou-se por utilizar a imagem *TCI*, uma vez que esta é construída a partir das bandas *B02* (azul), *B03* (verde) e *B04* (vermelho).
 
-Começámos por transformar a imagem para um domínio em grayscale de forma a facilitar o seu processamento e de seguida, de forma a simplificar a segmentação da zona pretendida foi aplica uma função de aumento de contraste adaptativa (*CLAHE*) com o recurso a um histograma, bem como uma correção gamma que se trata de uma operação não linear de ajuste de iluminância através da expressão *power law*. Após aplicar estes ajustes o contraste entre a estrada e os elementos que compõem o fundo é mais notável.
+Começou-se por transformar a imagem para um domínio em *grayscale*, de forma a facilitar o seu processamento. De seguida, de forma a simplificar a segmentação da zona pretendida, foi aplicada uma função de aumento de contraste adaptativa (a função *CLAHE*), com o recurso a um histograma. Além disso, foi aplicada uma correção *gamma*, que se trata de uma operação não linear que permite ajustar a iluminância através da expressão *power law*. Após aplicar estes ajustes, o contraste entre a estrada e os elementos que compõem o fundo é mais notável.
 
 ### Thresholding global adaptativo
 
-Após pré-processamento passamos para a segmentação de zonas de maior interesse da imagem. De forma a conseguir obter os resultados pretendidos a intensidade da imagem é dividida em 4 regiões de análise, baseadas na média de intensidades da imagem (M). A região A inclui píxeis com valores de intensidade entre o valor mais baixo da intensidade e a metade da média de intensidades, correspondendo a zonas com carros escuros, sombras e lagos. A região B tem pixeis com domínio de intensidades entre metade da média de píxeis até à média M e indentifica objetos como árvores e relvado. A região C inclui valores de intensitade entre M e metade do valor máximo de intensidades, sendo possível indentificar estradas de alcatrão. A última região D, com os restantes píxeis indentifica também estradas de alcatrão bem como veículos mais claros, núvens e algumas casas. Dito isto, para os passos seguintes foram segmentadas as regiões C e D.
+Após o pré-processamento, seguiu-se a segmentação das zonas da imagem com maior interesse. De forma a conseguir obter os resultados pretendidos, a intensidade da imagem foi dividida em quatro regiões de análise, baseadas na média de intensidades da imagem (M). A região A inclui píxeis com valores de intensidade que estão entre o valor mais baixo da intensidade e a metade da média de intensidades, correspondendo a zonas com carros escuros, sombras e lagos. A região B tem pixeis com domínio de intensidades entre metade da média de píxeis até à média M e indentifica objetos como árvores e relvado. A região C inclui valores de intensitade entre M e metade do valor máximo de intensidade, sendo possível indentificar estradas de alcatrão. A última região D, com os píxeis presentes na restante gama de valores, indentifica também estradas de alcatrão e veículos mais claros, nuvens e algumas casas. Dito isto, para os passos seguintes foram segmentadas as regiões C e D.
 
 ![alt text](https://github.com/german0/Road-Detection/blob/master/histograma.png)
 
