@@ -42,6 +42,14 @@ def read_image(path):
     #rgb[...,2] = blue
     return  tci,np.array(rgb)
 
+def mean_line(image):
+    total = []
+    for line in image:
+        size = len(line)
+        values = np.sum(np.array(line))
+        total.append(values)
+    return np.median(np.array(total))
+
 def mean(image):
     N,L = image.shape
     total = 0
@@ -192,21 +200,21 @@ def process(image):
     road = pre * road_mask
     clouds_mask = detect_bright(road)
     laplacian = cv2.Laplacian(road, cv2.CV_64F)
-    print(clouds_mask.max())
-    laplacian = interval(laplacian) * (1-clouds_mask)
-    m = laplacian.mean()
-    print(m)
+    laplacian =  interval(laplacian)
+    m = mean(laplacian)
     for x in range(0,N-stepx,stepx):
         for y in range(0,L-stepy,stepy):
-            cropped = laplacian[x:x+stepx,y:y+stepy]
+            cropped = laplacian[x:x+stepx,y:y+stepy] <= m
+            mask = 1 - clouds_mask[x:x+stepx,y:y+stepy]
+            cropped = cropped * mask
             #print(laplacian.max(),laplacian.min())
             #skel = morphology(np.array(laplacian,dtype='uint8'))
-            compare_images(image[x:x+stepx,y:y+stepy],cropped<=m)
-            já deteta estradas
-            secalhar calcular média por linha e depois a mediana de todas
-            closings e openings para ficar com estradas mais definidas
-            skeletization
-            tá autamente
+            compare_images(image[x:x+stepx,y:y+stepy],cropped)
+            #já deteta estradas
+            #secalhar calcular média por linha e depois a mediana de todas
+            #closings e openings para ficar com estradas mais definidas
+            #skeletization
+            #tá autamente
             #compare_images(pre[x:x+stepx,y:y+stepy],clouds_mask[x:x+stepx,y:y+stepy])
             #prune = pruning(skel)
     # compare_images(skel,cv2.Canny(skel,100,200))
@@ -219,7 +227,7 @@ if __name__=="__main__":
     if path == "":
         print("Using default path " + default_path)
         path = default_path
-    # tci = np.array((cv2.imread('wtf.tif'))[:,:,1])
+    #tci = np.array((cv2.imread('wtf.tif'))[:,:,1])
     tci,rgb = read_image(path)
     tci = np.array(tci,dtype='uint8')
     final = process(tci)
