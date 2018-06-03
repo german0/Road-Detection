@@ -212,6 +212,6 @@ if __name__=="__main__":
     print("Done.\n")
     tci = np.array(tci,dtype='uint8')
     final = process(tci)
-    cv2.imwrite('final.jp2',final)
+    #cv2.imwrite('final.jp2',final)
     print("Saving image \"final.jpg\" to path ...")
     print("Script complete.")

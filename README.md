@@ -42,7 +42,7 @@ http://www.gdal.org/frmt_sentinel2.html
 
  Após o pré-processamento, seguiu-se a segmentação das zonas da imagem com maior interesse. De forma a conseguir obter os resultados pretendidos, a intensidade da imagem foi dividida em quatro regiões de análise, baseadas na média de intensidades da imagem (M). A região A inclui píxeis com valores de intensidade que estão entre o valor mais baixo da intensidade e a metade da média de intensidades, correspondendo a zonas com carros escuros, sombras e lagos. A região B tem pixeis com domínio de intensidades entre metade da média de píxeis até à média M e indentifica objetos como árvores e relvado. A região C inclui valores de intensitade entre M e metade do valor máximo de intensidade, sendo possível indentificar estradas de alcatrão. A última região D, com os píxeis presentes na restante gama de valores, indentifica também estradas de alcatrão e veículos mais claros, nuvens e algumas casas. Dito isto, para os passos seguintes foram segmentadas as regiões C e D.
 
-![alt text](https://github.com/german0/Road-Detection/blob/master/histograma.png)
+![alt text](https://github.com/german0/Road-Detection/blob/master/img/histograma.png)
 
 ### Operações Morfológicas
 
@@ -65,27 +65,19 @@ http://www.gdal.org/frmt_sentinel2.html
  
  **adaptative_thresholding** - função que codifica o *thresholding* global adaptativo apresentado acima.
  
- **compare_images** - função que apresenta uma parte da imagem com o filtro laplaciano e a parte respetiva da imagem , lado a lado.
+ **compare_images** - função que apresenta duas imagens lado a lado.
  
  **adjust_gamma** - função que permite fazer o ajuste na iluminação da imagem, através de uma *power law*. 
  
  **pre_process** - função de aumento de contraste adaptativa (a função *CLAHE*), para simplificar a segmentação da zona pretendida. Para este fim, usou-se como recurso o histograma da imagem *TCI*. 
   
- **skeleton** - 
+ **skeleton** - esta função aplica o efeito de *thining* na imagem segmentada, retornando uma máscara com todos os segmentos com apenas 1 píxel de comprimento. 
  
- **morphology** - 
+ **morphology** -  nesta função são aplicadas várias operações morfológicas de modo a remover algum ruído e segmentos de estrada incorretamente detetados.
  
- **pruning** - 
+ **interval** - a função *interval* transforma o domínio de uma matriz num domínio entre os valores 0 e 255.
  
- **build_filters** -   
- 
- **process_gabor** - 
- 
- **gabor_filtering** - 
- 
- **interval** - 
- 
- **process** - 
+ **process** - esta é a principal função implementada uma vez que é através desta função que são chamadas todas as anteriores de forma a aplicar as transformações desejadas à imagem.
 
 
 ## Conclusão
