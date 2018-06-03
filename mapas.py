@@ -13,7 +13,6 @@ def read_image(path):
     rgb = []
     jp2s = []
     #obter os ficheiros da pasta dada como input
-    print(path)
     for (dirpath, dirnames, filenames) in walk(path):
         jp2s = filenames
         break
@@ -41,14 +40,6 @@ def read_image(path):
     #rgb[...,1] = green
     #rgb[...,2] = blue
     return  tci,np.array(rgb)
-
-def mean_line(image):
-    total = []
-    for line in image:
-        size = len(line)
-        values = np.sum(np.array(line))
-        total.append(values)
-    return np.median(np.array(total))
 
 def mean(image):
     N,L = image.shape
@@ -99,7 +90,6 @@ def adjust_gamma(image, gamma=0.5):
 
 def pre_process(image):
     final = image
-    #clahe = cv2.createCLAHE(clipLimit=4.0, tileGridSize=(8,8))
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
     contrast = clahe.apply(final)
     gamma = adjust_gamma(contrast)
@@ -125,21 +115,20 @@ def skeleton(img):
             done = True
     return skel
 
-def morphology(image,m):
-    kernel1 = np.ones((20, 20), np.uint8)
-    kernel2 = np.ones((2, 2), np.uint8)
-    ret,th1 = cv2.threshold(image,0,140,cv2.THRESH_BINARY)
-    #erosion = cv2.erode(image, None, iterations=1)
-    #opening = cv2.morphologyEx(image, cv2.MORPH_CLOSE, kernel2, iterations=1)
-    #m_opening = cv2.morphologyEx(image, cv2.MORPH_OPEN, None,iterations=2)
-    #m_opening = m_opening > 0
-    #opening = np.array(image * (1-m_opening),dtype="uint8")
-    #compare_images(image,opening)
-    #closing = cv2.morphologyEx(image, cv2.MORPH_CLOSE, kernel2, iterations=2)
-    #opening = cv2.morphologyEx(closing, cv2.MORPH_OPEN, kernel2, iterations=1)
-    #skel = skeleton(image)
-    #closing = cv2.morphologyEx(skel, cv2.MORPH_CLOSE, kernel2, iterations=2)
-    return th1
+def morphology(original,laplacian,mask):
+    kernel1 = np.ones((2, 2), np.uint8)
+    kernel2 = np.ones((3, 3), np.uint8)
+    kernel3 = np.ones((1,1), np.uint8)
+    relev = np.array(1 - (laplacian == 0),dtype = 'uint8')
+    closing = cv2.morphologyEx(relev, cv2.MORPH_CLOSE, kernel2, iterations=1)
+    opening = cv2.morphologyEx(closing, cv2.MORPH_OPEN, kernel2, iterations=1)
+    segmented = np.array(laplacian * opening,dtype='uint8')
+    road = cv2.adaptiveThreshold(segmented,255,cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY,11,2)
+    #inverter a imagem para ficar com as estradas como partes claras
+    road = np.array((255 - road) * mask,dtype='uint8')
+    road = cv2.erode(road, kernel3, iterations = 1)
+    skel = skeleton(road)
+    return skel
 
 def pruning(skel):
     # make out input nice, possibly necessary
@@ -155,40 +144,14 @@ def pruning(skel):
     filtered = cv2.filter2D(skel, src_depth, kernel)
 
     # now look through to find the value of 11
-    # this returns a mask of the endpoints, but if you just want the coordinates, you could simply return np.where(filtered==11)
     out = np.zeros_like(skel)
     out[np.where(filtered == 11)] = 1
     return out
 
-def build_filters():
-    filters = []
-    ksize = 52
-    for theta in np.arange(0, np.pi, np.pi / 12):
-        #kern = cv2.getGaborKernel((ksize, ksize), 1.0, theta, 5.0, 0.5, 0, ktype=cv2.CV_32F)
-        kern = cv2.getGaborKernel((ksize,ksize), 3.0, theta, 5.0, 0.5, 0, ktype=cv2.CV_32F)
-        kern /= 1.5*kern.sum()
-        filters.append(kern)
-    return filters
-
-def process_gabor(img, filters):
-    accum = np.zeros_like(img)
-    gabor = img
-    for kern in filters:
-        fimg = cv2.filter2D(gabor, cv2.CV_8UC3, kern)
-        np.maximum(accum, fimg, accum)
-    return accum
-
-def gabor_filtering(image):
-    filters = build_filters()
-    gabor = process_gabor(image,filters)
-    #print_image(gabor)
-    #ret, th1 = cv2.threshold(image, 100, 255, cv2.THRESH_BINARY)
-    return gabor
-
 def interval(image):
     min = np.array(image).min()
     image += abs(min)
-    max = np.array(image).max() + abs(min)
+    max = np.array(image).max()
     value = np.divide(image,max)*255
     return value
 
@@ -196,31 +159,45 @@ def process(image):
     N,L = image.shape
     stepx = round(N/30)
     stepy = round(N/30)
+    final = np.zeros_like(image)
+    print("Adjusting gamma values ...")
     pre = pre_process(image)
+    print("Done.\n")
+    print("Dividing in regions by frequency ...")
     road_mask = adaptative_thresholding(pre)
+    print("Done.\n")
+    print("Processing image ...")
     road = pre * road_mask
     clouds_mask = detect_bright(road)
     laplacian = cv2.Laplacian(road, cv2.CV_64F)
     laplacian =  interval(laplacian)
-    m = mean(laplacian)
+    
     for x in range(0,N-stepx,stepx):
         for y in range(0,L-stepy,stepy):
-            cropped = laplacian[x:x+stepx,y:y+stepy] <= m
-            #cropped = cv2.adaptiveThreshold(np.array(cropped,dtype='uint8'),255,cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY,11,2)
+            cropped_o = road[x:x+stepx,y:y+stepy]
+            cropped_l = laplacian[x:x+stepx,y:y+stepy]
             mask = 1 - clouds_mask[x:x+stepx,y:y+stepy]
-            cropped = cropped * mask
-            #skel = morphology(np.array(cropped,dtype='uint8'),m)
-            compare_images(laplacian[x:x+stepx,y:y+stepy],cropped)
-            #compare_images(cropped,skel)
-            #já deteta estradas
-            #secalhar calcular média por linha e depois a mediana de todas
-            #closings e openings para ficar com estradas mais definidas
-            #skeletization
-            #tá autamente
-            #compare_images(pre[x:x+stepx,y:y+stepy],clouds_mask[x:x+stepx,y:y+stepy])
-            #prune = pruning(skel)
-    # compare_images(skel,cv2.Canny(skel,100,200))
-    return skel
+            edges = morphology(cropped_o,cropped_l,mask)
+            final[x:x+stepx,y:y+stepy] = edges
+            compare_images(image[x:x+stepx,y:y+stepy],final[x:x+stepx,y:y+stepy])
+
+    for x in range(0,N-stepx,stepx):
+        cropped_o = road[x:x+stepx,L-stepy:L]
+        cropped_l = laplacian[x:x+stepx,L-stepy:L]
+        mask = 1 - clouds_mask[x:x+stepx,L-stepy:L]
+        edges = morphology(cropped_o,cropped_l,mask)
+        final[x:x+stepx,L-stepy:L] = edges
+    
+    for y in range(0,L-stepy,stepy):
+        cropped_o = road[N-stepx:N,y:y+stepy]
+        cropped_l = laplacian[N-stepx:N,y:y+stepy]
+        mask = 1 - clouds_mask[N-stepx:N,y:y+stepy]
+        edges = morphology(cropped_o,cropped_l,mask)
+        final[N-stepx:N,y:y+stepy] = edges
+
+    print("Processing complete ...")
+    
+    return final
 
 
 if __name__=="__main__":
@@ -229,10 +206,12 @@ if __name__=="__main__":
     if path == "":
         print("Using default path " + default_path)
         path = default_path
-    #tci = np.array((cv2.imread('wtf.tif'))[:,:,1])
+
+    print("\nReading image ...")
     tci,rgb = read_image(path)
+    print("Done.\n")
     tci = np.array(tci,dtype='uint8')
     final = process(tci)
-    #edges = cv2.Canny(img,100,200)
-
-    #testar closings e openings
+    cv2.imwrite('final.jp2',final)
+    print("Saving image \"final.jpg\" to path ...")
+    print("Script complete.")
