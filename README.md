@@ -54,7 +54,38 @@ http://www.gdal.org/frmt_sentinel2.html
 
  *Skeletization* permite diminuir a grossura de objetos e funciona como um *edge detector*, reduzindo todas as linhas para linhas com apenas 1 pixel de grossura através de um algoritmo de transformação *hit-and-miss*. Após analisados alguns algoritmos implementados de *thining*, foi decidido utilizar o algoritmo *Zhang-Suen Thinning algorithm* visto que se trata do algoritmo mais utilizado e remove, em cada iteração, os segmentos redundantes até atingir o resultado pretendido, resultado esse que é verificado comparando o total de píxeis sobre os píxeis segmentados até então.
  
-### Funções 
- ** - read_image ** :
+### API
+ **read_image** - função que permite ler a imagem *TCI* (imagem escolhida porque é construída a partir das bandas *B02* (azul), *B03* (verde) e *B04* (vermelho)) como um *array*.
+ 
+ **mean_line** - função que não retorna a média porque o germano não sabe que para fazer médias tem de se dividir pelo valor total. 
+ 
+ **mean** - função que calcula a média dos valores da imagem que não correspondem a píxeis pretos.
+ 
+ **detect_bright** - função que deteta as partes claras da imagem. Começa por obter um elemento estruturante, que coresponde a uma elipse, e, de seguida, aplica um esbatimento com uma função guassiana. De seguida, aplica-se um *threshold* binário à imagem esbatida e é feita uma erosão seguida de uma dilatação à imagem esbatida e com a aplicação do *threshold*. Retorna-se apenas os pixeis que correspondem a píxeis claros. 
+ 
+ **adaptative_thresholding** - função que codifica o *thresholding* global adaptativo apresentado acima.
+ 
+ **compare_images** - função que apresenta uma parte da imagem com o filtro laplaciano e a parte respetiva da imagem , lado a lado.
+ 
+ **adjust_gamma** - 
+ 
+ **pre_process** -  
+  
+ **skeleton** - 
+ 
+ **morphology** - 
+ 
+ **pruning** - 
+ 
+ **build_filters** -   
+ 
+ **process_gabor** - 
+ 
+ **gabor_filtering** - 
+ 
+ **interval** - 
+ 
+ **process** - 
+
 
 ## Conclusão
