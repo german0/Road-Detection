@@ -56,9 +56,6 @@ http://www.gdal.org/frmt_sentinel2.html
 
 ###Resultados
 
-![alt-text-1](img/o1.png | width=100) ![alt-text-2](img/o2.png | width=100)
-
-![alt-text-1](img/adaptative.png "threshold adaptativo 1") ![alt-text-2](img/adaptative2.png "threshold adaptativo 2")
 
 ### API
  **read_image** - função que permite ler a imagem *TCI* (imagem escolhida porque é construída a partir das bandas *B02* (azul), *B03* (verde) e *B04* (vermelho)) como um *array*.
