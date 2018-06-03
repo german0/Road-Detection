@@ -67,9 +67,9 @@ http://www.gdal.org/frmt_sentinel2.html
  
  **compare_images** - função que apresenta uma parte da imagem com o filtro laplaciano e a parte respetiva da imagem , lado a lado.
  
- **adjust_gamma** - 
+ **adjust_gamma** - função que permite fazer o ajuste na iluminação da imagem, através de uma *power law*. 
  
- **pre_process** -  
+ **pre_process** - função de aumento de contraste adaptativa (a função *CLAHE*), para simplificar a segmentação da zona pretendida. Para este fim, usou-se como recurso o histograma da imagem *TCI*. 
   
  **skeleton** - 
  
