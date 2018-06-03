@@ -89,7 +89,6 @@ def compare_images(image1, image2):
 
 #ajuste de iluminação da imagem
 def adjust_gamma(image, gamma=0.5):
-    #gamma o,5
     # build a lookup table mapping the pixel values [0, 255] to
     # their adjusted gamma values
     invGamma = 1.5 / gamma
@@ -126,10 +125,11 @@ def skeleton(img):
             done = True
     return skel
 
-def morphology(image):
-    #kernel1 = np.ones((20, 20), np.uint8)
-    #kernel2 = np.ones((2, 2), np.uint8)
-    # erosion = cv2.erode(laplacian*255, kernel2, iterations=1)
+def morphology(image,m):
+    kernel1 = np.ones((20, 20), np.uint8)
+    kernel2 = np.ones((2, 2), np.uint8)
+    ret,th1 = cv2.threshold(image,0,140,cv2.THRESH_BINARY)
+    #erosion = cv2.erode(image, None, iterations=1)
     #opening = cv2.morphologyEx(image, cv2.MORPH_CLOSE, kernel2, iterations=1)
     #m_opening = cv2.morphologyEx(image, cv2.MORPH_OPEN, None,iterations=2)
     #m_opening = m_opening > 0
@@ -137,9 +137,9 @@ def morphology(image):
     #compare_images(image,opening)
     #closing = cv2.morphologyEx(image, cv2.MORPH_CLOSE, kernel2, iterations=2)
     #opening = cv2.morphologyEx(closing, cv2.MORPH_OPEN, kernel2, iterations=1)
-    skel = skeleton(image)
+    #skel = skeleton(image)
     #closing = cv2.morphologyEx(skel, cv2.MORPH_CLOSE, kernel2, iterations=2)
-    return skel
+    return th1
 
 def pruning(skel):
     # make out input nice, possibly necessary
@@ -189,7 +189,8 @@ def interval(image):
     min = np.array(image).min()
     image += abs(min)
     max = np.array(image).max() + abs(min)
-    return np.divide(image,max)*255
+    value = np.divide(image,max)*255
+    return value
 
 def process(image):
     N,L = image.shape
@@ -205,11 +206,12 @@ def process(image):
     for x in range(0,N-stepx,stepx):
         for y in range(0,L-stepy,stepy):
             cropped = laplacian[x:x+stepx,y:y+stepy] <= m
+            #cropped = cv2.adaptiveThreshold(np.array(cropped,dtype='uint8'),255,cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY,11,2)
             mask = 1 - clouds_mask[x:x+stepx,y:y+stepy]
             cropped = cropped * mask
-            #print(laplacian.max(),laplacian.min())
-            #skel = morphology(np.array(laplacian,dtype='uint8'))
-            compare_images(image[x:x+stepx,y:y+stepy],cropped)
+            #skel = morphology(np.array(cropped,dtype='uint8'),m)
+            compare_images(laplacian[x:x+stepx,y:y+stepy],cropped)
+            #compare_images(cropped,skel)
             #já deteta estradas
             #secalhar calcular média por linha e depois a mediana de todas
             #closings e openings para ficar com estradas mais definidas
