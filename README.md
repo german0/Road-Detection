@@ -53,7 +53,10 @@ http://www.gdal.org/frmt_sentinel2.html
  Removidos os elementos com menor interesse, conseguimos obter a silhueta de estradas pretendidas no resultado final. Uma vez que, como foi dito anteriormente, uma estrada é identificada pela sua conectividade, foi aplicada uma ténica de *skeletization* de forma a preservar a continuidade e conectividade dos componentes ligados e ao mesmo tempo remover píxeis de *foreground*.
 
  *Skeletization* permite diminuir a grossura de objetos e funciona como um *edge detector*, reduzindo todas as linhas para linhas com apenas 1 pixel de grossura através de um algoritmo de transformação *hit-and-miss*. Após analisados alguns algoritmos implementados de *thining*, foi decidido utilizar o algoritmo *Zhang-Suen Thinning algorithm* visto que se trata do algoritmo mais utilizado e remove, em cada iteração, os segmentos redundantes até atingir o resultado pretendido, resultado esse que é verificado comparando o total de píxeis sobre os píxeis segmentados até então.
- 
+
+###Resultados
+![alt-text-1](img/o1.png "original 1") ![alt-text-2](img/o2.png "original2")
+![alt-text-1](img/adaptative.png "threshold adaptativo 1") ![alt-text-2](img/adaptative2.png "threshold adaptativo 2")
 ### API
  **read_image** - função que permite ler a imagem *TCI* (imagem escolhida porque é construída a partir das bandas *B02* (azul), *B03* (verde) e *B04* (vermelho)) como um *array*.
  
