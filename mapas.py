@@ -22,23 +22,6 @@ def read_image(path):
             nir_band = nir_ds.GetRasterBand(1)
             nir = nir_band.ReadAsArray()
             tci = nir
-        #if 'B02' in jp2:
-        #    nir_ds = gdal.Open(path + "/" + jp2)
-        #    nir_band = nir_ds.GetRasterBand(1)
-        #    red = nir_band.ReadAsArray()
-        #if 'B03' in jp2:
-        #    nir_ds = gdal.Open(path + "/" + jp2)
-        #    nir_band = nir_ds.GetRasterBand(1)
-        #    green = nir_band.ReadAsArray()
-        #if 'B04' in jp2:
-        #    nir_ds = gdal.Open(path + "/" + jp2)
-        #    nir_band = nir_ds.GetRasterBand(1)
-        #    blue = nir_band.ReadAsArray()
-    #N,L = red.shape
-    #rgb = np.zeros((N,L,3), 'uint8')
-    #rgb[...,0] = red
-    #rgb[...,1] = green
-    #rgb[...,2] = blue
     return  tci,np.array(rgb)
 
 def mean(image):
@@ -59,8 +42,7 @@ def detect_bright(image):
 
 def adaptative_thresholding(image):
     m = np.array(image).mean()
-    #print(m,mean(image))
-    #m = mean(image)
+
     th1 = round(m/2)
     th2 = m + round(m/2)
     mask_a = image <= th1
@@ -76,6 +58,10 @@ def compare_images(image1, image2):
     plt.imshow(image1,cmap='gray')
     f.add_subplot(1, 2, 2)
     plt.imshow(image2,cmap='gray')
+    plt.show()
+
+def show_image(image):
+    plt.imshow(image,cmap='gray')
     plt.show()
 
 #ajuste de iluminação da imagem
@@ -115,38 +101,40 @@ def skeleton(img):
             done = True
     return skel
 
-def morphology(original,laplacian,mask):
+def labeling(image):
+    output = cv2.connectedComponentsWithStats(image)
+    num_labels = output[0]
+    labels = output[1]
+    stats = output[2]
+    area = []
+    merge = np.zeros_like(image)
+    for i in range(1,num_labels):
+        area.append((stats[i,cv2.CC_STAT_AREA],i))
+    area = sorted(area)[::-1]
+    if len(area)>2:
+        image1 = np.array(labels==area[0][1],dtype='uint8')
+        image2 = np.array(labels==area[1][1],dtype='uint8')
+        merge = np.bitwise_or(image1,image2)
+        return merge
+    return (labels > 1) * 1
+
+def morphology(original,clouds):
     kernel1 = np.ones((2, 2), np.uint8)
     kernel2 = np.ones((3, 3), np.uint8)
     kernel3 = np.ones((1,1), np.uint8)
-    relev = np.array(1 - (laplacian == 0),dtype = 'uint8')
-    closing = cv2.morphologyEx(relev, cv2.MORPH_CLOSE, kernel2, iterations=1)
-    opening = cv2.morphologyEx(closing, cv2.MORPH_OPEN, kernel2, iterations=1)
-    segmented = np.array(laplacian * opening,dtype='uint8')
-    road = cv2.adaptiveThreshold(segmented,255,cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY,11,2)
-    #inverter a imagem para ficar com as estradas como partes claras
-    road = np.array((255 - road) * mask,dtype='uint8')
-    road = cv2.erode(road, kernel3, iterations = 1)
-    skel = skeleton(road)
+
+    mask = np.bitwise_and(original > 0, 1-clouds)
+    mask = np.array(mask,dtype='uint8')
+    original = original * mask
+
+    closing = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel2, iterations=3)
+    mask_connect = labeling(closing)
+    #connected = np.bitwise_and(closing,mask_connect)
+    connected = np.bitwise_and(mask,mask_connect)
+    segmented = np.array(connected,dtype='uint8')
+
+    skel = skeleton(segmented)
     return skel
-
-def pruning(skel):
-    # make out input nice, possibly necessary
-    skel = skel.copy()
-    skel[skel != 0] = 1
-    skel = np.uint8(skel)
-
-    # apply the convolution
-    kernel = np.uint8([[1, 1, 1],
-                       [1, 10, 1],
-                       [1, 1, 1]])
-    src_depth = -1
-    filtered = cv2.filter2D(skel, src_depth, kernel)
-
-    # now look through to find the value of 11
-    out = np.zeros_like(skel)
-    out[np.where(filtered == 11)] = 1
-    return out
 
 def interval(image):
     min = np.array(image).min()
@@ -169,34 +157,33 @@ def process(image):
     print("Processing image ...")
     road = pre * road_mask
     clouds_mask = detect_bright(road)
-    laplacian = cv2.Laplacian(road, cv2.CV_64F)
-    laplacian =  interval(laplacian)
+    
+    cropped_o = road
+    #cropped_l = laplacian[x:x+stepx,y:y+stepy]
+    mask = clouds_mask
     
     for x in range(0,N-stepx,stepx):
         for y in range(0,L-stepy,stepy):
             cropped_o = road[x:x+stepx,y:y+stepy]
-            cropped_l = laplacian[x:x+stepx,y:y+stepy]
-            mask = 1 - clouds_mask[x:x+stepx,y:y+stepy]
-            edges = morphology(cropped_o,cropped_l,mask)
+            mask = clouds_mask[x:x+stepx,y:y+stepy]
+            edges = morphology(cropped_o,mask)
+            show_image(image[x:x+stepx,y:y+stepy])
+            show_image(edges)
             final[x:x+stepx,y:y+stepy] = edges
-            compare_images(image[x:x+stepx,y:y+stepy],final[x:x+stepx,y:y+stepy])
 
     for x in range(0,N-stepx,stepx):
         cropped_o = road[x:x+stepx,L-stepy:L]
-        cropped_l = laplacian[x:x+stepx,L-stepy:L]
-        mask = 1 - clouds_mask[x:x+stepx,L-stepy:L]
-        edges = morphology(cropped_o,cropped_l,mask)
+        mask = clouds_mask[x:x+stepx,L-stepy:L]
+        edges = morphology(cropped_o,mask)
         final[x:x+stepx,L-stepy:L] = edges
     
     for y in range(0,L-stepy,stepy):
         cropped_o = road[N-stepx:N,y:y+stepy]
-        cropped_l = laplacian[N-stepx:N,y:y+stepy]
         mask = 1 - clouds_mask[N-stepx:N,y:y+stepy]
-        edges = morphology(cropped_o,cropped_l,mask)
+        edges = morphology(cropped_o,mask)
         final[N-stepx:N,y:y+stepy] = edges
 
     print("Processing complete ...")
-    
     return final
 
 
@@ -212,6 +199,5 @@ if __name__=="__main__":
     print("Done.\n")
     tci = np.array(tci,dtype='uint8')
     final = process(tci)
-    #cv2.imwrite('final.jp2',final)
     print("Saving image \"final.jpg\" to path ...")
     print("Script complete.")
