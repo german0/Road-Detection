@@ -88,7 +88,8 @@ depois botamos imagens mai tarde.
 
 
 ## Conclusão
- Fazendo uma avaliação global da realização deste projeto, deparamo-nos com algumas dificuldades, mas pensamos ter conseguido construir um projeto que vai de encontro ao esperado e que permitiu aprofundar os conhecimentos adquiridos nesta Unidade Curricular.
+O trabalho realizado permitiu aprofundar conhecimentos de processamento de imagem e de visualização de informação geométrica com o auxílio da ferramenta QGIS. Permitiu também analisar as imagens, ou produtos, que satélite Sentinel fornece (tal como informações metereológicas) e da relevância dessa informação para a segmentação de estradas.
 
-Se nos tivesse dado imagens de jeito ...
-fim
+Dito isto, deparámo-nos com algumas dificuldades relativamente ao processamento destas imagens uma vez que a sua resolução não é a indicada para segmentação devido ao baixo contraste presente nas mesmas e à resolução espacial. Para obter melhores resultados seria necessário, em primeiro lugar, um menor número de núvens e uma distância mínima entre dois objetos inferior (resolução espacial menor). 
+
+Fazendo uma avaliação global da realização deste projeto, deparamo-nos com algumas dificuldades, mas pensamos ter conseguido construir um projeto que vai de encontro ao esperado e que permitiu aprofundar os conhecimentos adquiridos nesta Unidade Curricular.
