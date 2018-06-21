@@ -38,6 +38,7 @@ http://www.gdal.org/frmt_sentinel2.html
 
  Começou-se por transformar a imagem para um domínio em *grayscale*, de forma a facilitar o seu processamento. De seguida, de forma a simplificar a segmentação da zona pretendida, foi aplicada uma função de aumento de contraste adaptativa (a função *CLAHE*), com o recurso a um histograma. Além disso, foi aplicada uma correção *gamma*, que se trata de uma operação não linear que permite ajustar a iluminância através da expressão *power law*. Após aplicar estes ajustes, o contraste entre a estrada e os elementos que compõem o fundo é mais notável.
 
+
 ### 2 - Thresholding global adaptativo
 
  Após o pré-processamento, seguiu-se a segmentação das zonas da imagem com maior interesse. De forma a conseguir obter os resultados pretendidos, a intensidade da imagem foi dividida em quatro regiões de análise, baseadas na média de intensidades da imagem (M). A região A inclui píxeis com valores de intensidade que estão entre o valor mais baixo da intensidade e a metade da média de intensidades, correspondendo a zonas com carros escuros, sombras e lagos. A região B tem pixeis com domínio de intensidades entre metade da média de píxeis até à média M e indentifica objetos como árvores e relvado. A região C inclui valores de intensitade entre M e metade do valor máximo de intensidade, sendo possível indentificar estradas de alcatrão. A última região D, com os píxeis presentes na restante gama de valores, indentifica também estradas de alcatrão e veículos mais claros, nuvens e algumas casas. Dito isto, para os passos seguintes foram segmentadas as regiões C e D.
@@ -51,7 +52,7 @@ http://www.gdal.org/frmt_sentinel2.html
   Encontram-se nas imagens seguintes exemplos do resultado obtido por esta função.
 
 ![alt text](/img/clouds.png)
-![alt text](/img/clouds2.png)
+![alt text](/img/clouds1.png)
 
 ### 4 - Segmentação
  Após isso, ou seja, depois de obtidas todas as regiões de interesse, é necessário aplicar algumas operações morfológicas que permitirão remover componentes irrelevantes. Assim, a imagem é dividida em várias porções, para facilitar a segmentação dessas zonas de interesse. A segmentação é obtida através da combinação de operações morfológicas, operações essas codificadas na função **morphology**. Nas operações morfológicas, as operações de *closing* e *thining* são a base do processamento da imagem. 
@@ -62,18 +63,24 @@ http://www.gdal.org/frmt_sentinel2.html
 ### Resultados
 Para se analisar os resultados obtidos, foi feita uma comparação visual e concluiu-se que os resultados são semelhantes ao que era suposto obter.
 
-De seguida, apresentam-se alguns dos resultados obtidos. Em cada linha, da esquerda para a direita, são apresentadas a imagem original, a imagem pré-processada com os ajustamentos de contraste e a segmentação final.
+De seguida, apresentam-se alguns dos resultados obtidos. Em cada linha, da esquerda para a direita, são apresentadas a imagem original, a imagem pré-processada com o ajustamento de contraste e a segmentação final.
 
 <p float="left">
-  <img src="/img/o3.png" width="300" />
-  <img src="/img/p3.png" width="300" /> 
-  <img src="/img/s3.png" width="300" />
+  <img src="/img/o3.png" width="200" />
+  <img src="/img/p3.png" width="200" /> 
+  <img src="/img/s3.png" width="200" />
 </p>
 
 <p float="left">
-  <img src="/img/o9.png" width="300" />
-  <img src="/img/p9.png" width="300" /> 
-  <img src="/img/s9.png" width="300" />
+  <img src="/img/o5.png" width="200" />
+  <img src="/img/p5.png" width="200" /> 
+  <img src="/img/s5.png" width="200" />
+</p>
+
+<p float="left">
+  <img src="/img/o9.png" width="200" />
+  <img src="/img/p9.png" width="200" />
+  <img src="/img/s9.png" width="200" />
 </p>
 
 Os resultados obtidos encontram-se na pasta /img.
