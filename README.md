@@ -48,48 +48,48 @@ http://www.gdal.org/frmt_sentinel2.html
  Após a segmentação das zonas da imagem com maior interesse, foi necessário criar um algoritmo para detetar *bright spots*. Este permite detetar nuvens e algumas casas que não são de interesse para o trabalho. Essas zonas serão retiradas da imagem.
   Este algoritmo é codificado na função **detect_bright**, onde se começa por obter um elemento estruturante, que corresponde a uma elipse. De seguida, aplica-se um esbatimento com uma função guassiana. Após isto, é feito um *threshold* binário à imagem esbatida e é aplicada uma erosão seguida de uma dilatação à imagem esbatida e com a aplicação do *threshold*. Retornam-se apenas os píxeis que correspondem a píxeis claros.  
 
-### 4 - Laplacian Edge Detector
- É utilizado o *Laplacian Edge Detector* para detetar mudanças repentinas nas cores e detetar as margens das estradas. Para isso, recorre-se à função *Laplacian* que está pré-definida no *Python* e que irá calcular o laplaciano da imagem.
+### 4 - Segmentação
+ Após isso, ou seja, depois de obtidas todas as regiões de interesse, é necessário aplicar algumas operações morfológicas que permitirão remover componentes irrelevantes. Assim, a imagem é dividida em várias porções, para facilitar a segmentação dessas zonas de interesse. A segmentação é obtida através da combinação de operações morfológicas, operações essas codificadas na função **morphology**. Nas operações morfológicas, as operações de *closing* e *thining* são a base do processamento da imagem. 
+ Inicialmente, começou-se por aplicar um *closing* à imagem, para retirar alguns falsos positivos e ligar algumas zonas da imagem (porque uma das características das estradas é o facto de serem contínuas). Seguidamente, foi feito o *labeling*, que permite segmentar as zonas de maior interesse da imagem. Por fim, é feito o *thining* para se obter apenas a linha central das estradas, isto é, em vez de ser mostrada toda a estrada, apenas se visualiza a estrada com 1 píxel de largura. 
 
-### 5 - Segmentação ou algo do género
- Após isso, ou seja, depois de obtidas todas as regiões de interesse, é necessário aplicar algumas operações morfológicas que permitirão remover componentes irrelevantes. Assim, a imagem é dividida em várias porções, para facilitar a segmentação dessas zonas de interesse. A segmentação é obtida através da combinação de operações morfológicas, operações essas codificadas na função **morphology**. Nas operações morfológicas, as operações de dilatação e erosão são a base do processamento da imagem. 
- Inicialmente, começou-se por aplicar um *closing* à imagem, para isolar algum ruído e remover componentes de pequena dimensão. Seguidamente, foi aplicada uma abertura, que se trata de uma erosão seguida de uma dilatação, para obter o efeito inverso ao obtido no passo anterior. Este *opening* permitiu remover ruído e zonas irrelevantes encontradas na deteção de bordas, como por exemplo casas e nuvens de maior dimensão. Visto que não se tratam de componentes de interesse, foram posteriormente removidos da imagem.
-
- Removidos os elementos com menor interesse, conseguimos obter a silhueta de estradas pretendidas no resultado final. Uma vez que, como foi dito anteriormente, uma estrada é identificada pela sua conectividade, foi aplicada uma ténica de *skeletization* de forma a preservar a continuidade e conectividade dos componentes ligados e, ao mesmo tempo, remover os píxeis de *foreground*. Isto foi codificado na função **skeleton**. *Skeletization* permite diminuir a grossura dos objetos e funciona como um *edge detector*, reduzindo todas as linhas para linhas com apenas um píxel de grossura através de um algoritmo de transformação *hit-and-miss*. Depois de terem sido analisados alguns algoritmos desenvolvidos de *thining*, foi decidido utilizar o algoritmo *Zhang-Suen Thinning Algorithm*. Esta decisão recaiu sobre o facto de se tratar do algoritmo mais utilizado e permite remover, em cada iteração, os segmentos redundantes até atingir o resultado pretendido, resultado esse que é verificado comparando o total de píxeis sobre os píxeis segmentados até então.
-
+ Segmentados todos os elementos com maior interesse, seguidos do respetivo *thining*, foi possível obter a silhueta de estradas que é pretendida no resultado final. Uma vez que, como foi dito anteriormente, uma estrada é identificada pela sua conectividade, foi aplicada uma ténica de *skeletization* de forma a preservar a continuidade e conectividade dos componentes ligados e, ao mesmo tempo, remover os píxeis de *foreground*. Isto foi codificado na função **skeleton**. *Skeletization* permite diminuir a grossura dos objetos e funciona como um *edge detector*, reduzindo todas as linhas para linhas com apenas 1 píxel de largura através de um algoritmo desenvolvido de *thining*. Este é o algoritmo que permitirá reduzir as linhas obtidas no resultado do *edge detector* para linhas com apenas 1 píxel de largura. *Thining* é normalmente aplicado apenas a imagens binárias, e produz outra imagem binária como resultado.
+ 
 ### Resultados
+Para se analisar os resultados obtidos, foi feita uma comparação visual e concluiu-se que os resultados são semelhantes ao que era suposto obter.
+
+De seguida, apresentam-se alguns dos resultados obtidos.
+
 Os resultados são as imagens que tão na pasta img, mas são bué grandes as imagens.
 depois botamos imagens mai tarde.
 
 ### API
  **• read_image** - função que permite ler a imagem *TCI* (imagem escolhida porque é construída a partir das bandas *B02* (azul), *B03* (verde) e *B04* (vermelho)) como um *array*.
  
- **• mean_line** - função que não retorna a média porque o germano não sabe que para fazer médias tem de se dividir pelo valor total. 
- 
  **• mean** - função que calcula a média dos valores da imagem que não correspondem a píxeis pretos.
  
- **• detect_bright** - função que deteta as partes claras da imagem. 
+ **• detect_bright** - função que deteta as partes claras da imagem, aplicando erosão e dilatação. 
  
  **• adaptative_thresholding** - função que codifica o *thresholding* global adaptativo apresentado acima.
  
  **• compare_images** - função que apresenta duas imagens lado a lado, sendo a da esquerda a imagem original e a da direita a imagem com a aplicação do laplaciano.
  
- **• adjust_gamma** - função que permite fazer o ajuste na iluminação da imagem, através de uma *power law*. 
+ **• adjust_gamma** - função que permite fazer o ajuste na iluminação da imagem, através de uma *lookup table*. 
  
  **• pre_process** - função de aumento de contraste adaptativa (uso da função *CLAHE*), para simplificar a segmentação da zona pretendida. Para este fim, usou-se como recurso o histograma da imagem *TCI*. 
   
- **• skeleton** - esta função aplica o efeito de *thining* na imagem segmentada, retornando uma máscara com todos os segmentos que têm apenas um píxel de comprimento. 
+ **• skeleton** - esta função aplica o efeito de *thining* na imagem segmentada, retornando uma máscara com todos os segmentos que têm apenas 1 píxel de comprimento. É nesta função que são aplicadas a erosão e a dilatação, para obter o resultado pretendido. 
  
- **• morphology** -  nesta função são aplicadas várias operações morfológicas para que seja possível remover algum ruído e alguns segmentos de estrada incorretamente detetados.
+ **• labeling** - função que retira apenas as zonas de maior interesse, através dos componentes ligados. Retorna os dois componentes ligados com maior comprimento.
+ 
+ **• morphology** -  nesta função são aplicadas várias operações morfológicas para que seja possível remover algum ruído e alguns segmentos de estrada incorretamente detetados, como é o caso de *bright spots*. De notar que são retiradas, por exemplo, as nuvens da imagem. 
  
  **• interval** - a função *interval* transforma o domínio de uma matriz num domínio entre os valores 0 e 255.
  
- **• process** - esta é a principal função implementada, uma vez que é através desta função que são chamadas todas as anteriores de forma a aplicar as transformações desejadas à imagem.
-
+ **• process** - esta é a principal função implementada, uma vez que é através desta função que são chamadas todas as anteriores de forma a aplicar as transformações desejadas à imagem. Começa-se por fazer um pré-processamento da imagem e é-lhe aplicada um *thresholding* adaptativo. Após isso, são retirados os *bright spots* e, por fim, são apresentadas 3 imagens lado a lado: a imagem original, a pré-processada e a final, para o resultado obtido poder ser visualmente apelativo.
 
 ## Conclusão
-O trabalho realizado permitiu aprofundar conhecimentos de processamento de imagem e de visualização de informação geométrica com o auxílio da ferramenta QGIS. Permitiu também analisar as imagens, ou produtos, que satélite Sentinel fornece (tal como informações metereológicas) e da relevância dessa informação para a segmentação de estradas.
+O trabalho realizado permitiu aprofundar conhecimentos de processamento de imagem e de visualização de informação geométrica com o auxílio da ferramenta QGIS. Permitiu também analisar as imagens, ou produtos, que o satélite Sentinel fornece (tal como informações metereológicas) e qual a relevância dessa informação para a segmentação de estradas.
 
-Dito isto, deparámo-nos com algumas dificuldades relativamente ao processamento destas imagens uma vez que a sua resolução não é a indicada para segmentação devido ao baixo contraste presente nas mesmas e à resolução espacial. Para obter melhores resultados seria necessário, em primeiro lugar, um menor número de núvens e uma distância mínima entre dois objetos inferior (resolução espacial menor). 
+Dito isto, aquando da resolução do projeto proposto, surgiram algumas dificuldades relativamente ao processamento destas imagens, uma vez que a sua resolução não é a indicada para segmentação devido ao baixo contraste presente nas mesmas e à resolução espacial. Para obter melhores resultados seria necessário, em primeiro lugar, um menor número de nuvens presente em cada imagem e uma distância mínima menor entre dois objetos (resolução espacial menor). 
 
-Fazendo uma avaliação global da realização deste projeto, deparamo-nos com algumas dificuldades, mas pensamos ter conseguido construir um projeto que vai de encontro ao esperado e que permitiu aprofundar os conhecimentos adquiridos nesta Unidade Curricular.
+Apesar das dificuldades apresentadas anteriormente acerca da resolução deste projeto, o grupo pensa ter conseguido construir um projeto que vai de encontro ao esperado e que permitiu aprofundar os conhecimentos adquiridos nesta Unidade Curricular.
