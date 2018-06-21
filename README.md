@@ -67,25 +67,24 @@ Para se analisar os resultados obtidos, foi feita uma comparação visual e conc
 De seguida, apresentam-se alguns dos resultados obtidos. Em cada linha, da esquerda para a direita, são apresentadas a imagem original, a imagem pré-processada com os ajustamentos de contraste e a segmentação final.
 
 <p float="left">
-  <img src="/img/o2.png" width="400" />
-  <img src="/img/p2.png" width="400" /> 
-  <img src="/img/s2.png" width="400" />
+  <img src="/img/o2.png" width="300" />
+  <img src="/img/p2.png" width="300" /> 
+  <img src="/img/s2.png" width="300" />
 </p>
 
 <p float="left">
-  <img src="/img/o3.png" width="400" />
-  <img src="/img/p3.png" width="400" /> 
-  <img src="/img/s3.png" width="400" />
+  <img src="/img/o3.png" width="300" />
+  <img src="/img/p3.png" width="300" /> 
+  <img src="/img/s3.png" width="300" />
 </p>
 
 <p float="left">
-  <img src="/img/o9.png" width="400" />
-  <img src="/img/p9.png" width="400" /> 
-  <img src="/img/s9.png" width="400" />
+  <img src="/img/o9.png" width="300" />
+  <img src="/img/p9.png" width="300" /> 
+  <img src="/img/s9.png" width="300" />
 </p>
 
-Os resultados são as imagens que tão na pasta img, mas são bué grandes as imagens.
-depois botamos imagens mai tarde.
+Os resultados obtidos encontram-se na pasta /img.
 
 ### API
  **• read_image** - função que permite ler a imagem *TCI* (imagem escolhida porque é construída a partir das bandas *B02* (azul), *B03* (verde) e *B04* (vermelho)) como um *array*.
