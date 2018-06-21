@@ -69,11 +69,11 @@ http://www.gdal.org/frmt_sentinel2.html
  Segmentados todos os elementos com maior interesse, seguidos do respetivo *thining*, foi possível obter a silhueta de estradas que é pretendida no resultado final. Uma vez que, como foi dito anteriormente, uma estrada é identificada pela sua conectividade, foi aplicada uma ténica de *skeletization* de forma a preservar a continuidade e conectividade dos componentes ligados e, ao mesmo tempo, remover os píxeis de *foreground*. Isto foi codificado na função **skeleton**. *Skeletization* permite diminuir a grossura dos objetos e funciona como um *edge detector*, reduzindo todas as linhas para linhas com apenas 1 píxel de largura através de um algoritmo desenvolvido de *thining*. Este é o algoritmo que permitirá reduzir as linhas obtidas no resultado do *edge detector* para linhas com apenas 1 píxel de largura. *Thining* é normalmente aplicado apenas a imagens binárias, e produz outra imagem binária como resultado.
  
 ### Resultados
-Para se analisar os resultados obtidos, foi feita uma comparação visual e concluiu-se que os resultados são semelhantes ao previsto tendo em conta a complexidade do projeto.
+Para se analisar os resultados obtidos, foi feita uma comparação visual e concluiu-se que os resultados são semelhantes ao previsto, tendo em conta a complexidade do projeto.
 
-Houve no entanto, algumas dificuldades na deteção de estradas em zonas rurais onde foram detetados alguns falsos positivos devido às variações de contraste entre áreas de cultivo e zonas agrestes.
+Houve, no entanto, algumas dificuldades na deteção de estradas em zonas rurais onde foram detetados alguns falsos positivos devido às variações de contraste entre áreas de cultivo e zonas agrestes.
 
-De seguida, apresentam-se alguns dos resultados obtidos. Em cada linha, da esquerda para a direita, são apresentadas a imagem original e a segmentação final.
+De seguida, apresentam-se alguns dos resultados obtidos. Em cada linha, da esquerda para a direita, são apresentadas a imagem original e a segmentação final, respetivamente.
 
 <p float="left">
   <img src="/img/o3.png" width="400" />
