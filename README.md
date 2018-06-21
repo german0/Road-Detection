@@ -59,6 +59,12 @@ Para se analisar os resultados obtidos, foi feita uma comparação visual e conc
 
 De seguida, apresentam-se alguns dos resultados obtidos.
 
+<p float="left">
+  <img src="/img/histograma.png" width="100" />
+  <img src="/img/histograma.png" width="100" /> 
+  <img src="/img/histograma.png" width="100" />
+</p>
+
 Os resultados são as imagens que tão na pasta img, mas são bué grandes as imagens.
 depois botamos imagens mai tarde.
 
