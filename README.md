@@ -9,7 +9,10 @@ Dado como input imagens de satélite, detetar estradas.
 
 **Software Utilizado**
 
+*Python*
+
 *OpenCV*
+
 
 *QGIS*
 
