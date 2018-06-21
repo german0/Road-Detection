@@ -51,8 +51,8 @@ http://www.gdal.org/frmt_sentinel2.html
   Encontra-se na imagem seguinte um exemplo do resultado obtido por esta função.
 
 <p float="center">
-  <img src="/img/o2.png" width="600" />
-  <img src="/img/clouds.png" width="600" /> 
+  <img src="/img/o2.png" width="400" />
+  <img src="/img/clouds.png" width="400" /> 
 </p>  
 
 ### 4 - Segmentação
@@ -67,21 +67,21 @@ Para se analisar os resultados obtidos, foi feita uma comparação visual e conc
 De seguida, apresentam-se alguns dos resultados obtidos. Em cada linha, da esquerda para a direita, são apresentadas a imagem original, a imagem pré-processada com os ajustamentos de contraste e a segmentação final.
 
 <p float="left">
-  <img src="/img/o2.png" width="600" />
-  <img src="/img/p2.png" width="600" /> 
-  <img src="/img/s2.png" width="600" />
+  <img src="/img/o2.png" width="400" />
+  <img src="/img/p2.png" width="400" /> 
+  <img src="/img/s2.png" width="400" />
 </p>
 
 <p float="left">
-  <img src="/img/o3.png" width="600" />
-  <img src="/img/p3.png" width="600" /> 
-  <img src="/img/s3.png" width="600" />
+  <img src="/img/o3.png" width="400" />
+  <img src="/img/p3.png" width="400" /> 
+  <img src="/img/s3.png" width="400" />
 </p>
 
 <p float="left">
-  <img src="/img/o9.png" width="600" />
-  <img src="/img/p9.png" width="600" /> 
-  <img src="/img/s9.png" width="600" />
+  <img src="/img/o9.png" width="400" />
+  <img src="/img/p9.png" width="400" /> 
+  <img src="/img/s9.png" width="400" />
 </p>
 
 Os resultados são as imagens que tão na pasta img, mas são bué grandes as imagens.
