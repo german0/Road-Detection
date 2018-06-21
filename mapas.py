@@ -186,7 +186,6 @@ def process(image):
     print("Processing complete ...")
     return final
 
-
 if __name__=="__main__":
     path = ""
     path = input("Satellite images folder:")
@@ -199,5 +198,5 @@ if __name__=="__main__":
     print("Done.\n")
     tci = np.array(tci,dtype='uint8')
     final = process(tci)
-    print("Saving image \"final.jpg\" to path ...")
+    show_image(final)
     print("Script complete.")
