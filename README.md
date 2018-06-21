@@ -38,6 +38,11 @@ http://www.gdal.org/frmt_sentinel2.html
 
  Começou-se por transformar a imagem para um domínio em *grayscale*, de forma a facilitar o seu processamento. De seguida, de forma a simplificar a segmentação da zona pretendida, foi aplicada uma função de aumento de contraste adaptativa (a função *CLAHE*), com o recurso a um histograma. Além disso, foi aplicada uma correção *gamma*, que se trata de uma operação não linear que permite ajustar a iluminância através da expressão *power law*. Após aplicar estes ajustes, o contraste entre a estrada e os elementos que compõem o fundo é mais notável.
 
+ <p float="left">
+  <img src="/img/o8.png" width="400" />
+  <img src="/img/p8.png" width="400" />
+</p>
+
 
 ### 2 - Thresholding global adaptativo
 
@@ -66,24 +71,21 @@ Para se analisar os resultados obtidos, foi feita uma comparação visual e conc
 De seguida, apresentam-se alguns dos resultados obtidos. Em cada linha, da esquerda para a direita, são apresentadas a imagem original, a imagem pré-processada com o ajustamento de contraste e a segmentação final.
 
 <p float="left">
-  <img src="/img/o3.png" width="200" />
-  <img src="/img/p3.png" width="200" /> 
-  <img src="/img/s3.png" width="200" />
+  <img src="/img/o3.png" width="400" />
+  <img src="/img/s3.png" width="400" />
 </p>
 
 <p float="left">
-  <img src="/img/o5.png" width="200" />
-  <img src="/img/p5.png" width="200" /> 
-  <img src="/img/s5.png" width="200" />
+  <img src="/img/o5.png" width="400" /> 
+  <img src="/img/s5.png" width="400" />
 </p>
 
 <p float="left">
-  <img src="/img/o9.png" width="200" />
-  <img src="/img/p9.png" width="200" />
-  <img src="/img/s9.png" width="200" />
+  <img src="/img/o9.png" width="400" />
+  <img src="/img/s9.png" width="400" />
 </p>
 
-Os resultados obtidos encontram-se na pasta /img.
+Alguns dos resultados obtidos encontram-se na pasta /img.
 
 ### API
  **• read_image** - função que permite ler a imagem *TCI* (imagem escolhida porque é construída a partir das bandas *B02* (azul), *B03* (verde) e *B04* (vermelho)) como um *array*.
