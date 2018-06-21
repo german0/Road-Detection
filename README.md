@@ -48,12 +48,10 @@ http://www.gdal.org/frmt_sentinel2.html
  Após a segmentação das zonas da imagem com maior interesse, foi necessário criar um algoritmo para detetar *bright spots*. Este permite detetar nuvens e algumas casas que não são de interesse para o trabalho. Essas zonas serão retiradas da imagem.
   Este algoritmo é codificado na função **detect_bright**, onde se começa por obter um elemento estruturante, que corresponde a uma elipse. De seguida, aplica-se um esbatimento com uma função guassiana. Após isto, é feito um *threshold* binário à imagem esbatida e é aplicada uma erosão seguida de uma dilatação à imagem esbatida e com a aplicação do *threshold*. Retornam-se apenas os píxeis que correspondem a píxeis claros.
 
-  Encontra-se na imagem seguinte um exemplo do resultado obtido por esta função.
+  Encontram-se nas imagens seguintes exemplos do resultado obtido por esta função.
 
-<p float="center">
-  <img src="/img/o2.png" width="400" />
-  <img src="/img/clouds.png" width="400" /> 
-</p>  
+![alt text](/img/clouds.png)
+![alt text](/img/clouds2.png)
 
 ### 4 - Segmentação
  Após isso, ou seja, depois de obtidas todas as regiões de interesse, é necessário aplicar algumas operações morfológicas que permitirão remover componentes irrelevantes. Assim, a imagem é dividida em várias porções, para facilitar a segmentação dessas zonas de interesse. A segmentação é obtida através da combinação de operações morfológicas, operações essas codificadas na função **morphology**. Nas operações morfológicas, as operações de *closing* e *thining* são a base do processamento da imagem. 
@@ -65,12 +63,6 @@ http://www.gdal.org/frmt_sentinel2.html
 Para se analisar os resultados obtidos, foi feita uma comparação visual e concluiu-se que os resultados são semelhantes ao que era suposto obter.
 
 De seguida, apresentam-se alguns dos resultados obtidos. Em cada linha, da esquerda para a direita, são apresentadas a imagem original, a imagem pré-processada com os ajustamentos de contraste e a segmentação final.
-
-<p float="left">
-  <img src="/img/o2.png" width="300" />
-  <img src="/img/p2.png" width="300" /> 
-  <img src="/img/s2.png" width="300" />
-</p>
 
 <p float="left">
   <img src="/img/o3.png" width="300" />
